@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="WindowBarView">
+
+        <!--bgcolor:背景颜色-->
+        <!--cendiagram:中心原点的图片-->
+        <!--foreground:前景颜色-->
+        <!--maxprogress:最大进度-->
+        <!--nowrogress:当前进度-->
+
+        <attr name="bgcolor" format="color" />
+        <attr name="cendiagram" format="color|reference" />
+        <attr name="foreground" format="color" />
+        <attr name="maxprogress" format="integer" />
+        <attr name="nowrogress" format="integer" />
+
+    </declare-styleable>
+
+</resources>
