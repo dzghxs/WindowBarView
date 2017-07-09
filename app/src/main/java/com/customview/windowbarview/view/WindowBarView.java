@@ -5,6 +5,7 @@ import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
@@ -35,7 +36,14 @@ public class WindowBarView extends View {
     private Drawable cendiagram = null;     //中心圆点的图片
     private Bitmap cendiagrambp = null;
 
-    private float mPreX,mPreY;
+    // 获得图片的宽高
+    int widthbm = 0;
+    int heightbm = 0;
+    // 取得想要缩放的matrix参数
+    Matrix matrix;
+    Bitmap newbm;
+
+    private float mPreX, mPreY;
 
     int width, height;
     Rect rect;
@@ -43,11 +51,11 @@ public class WindowBarView extends View {
 
     public setonBarTouthnListener touthnListener = null;
 
-    public interface setonBarTouthnListener{
+    public interface setonBarTouthnListener {
         public void GetProgress(int progress);
     }
 
-    public void getonBarProgressListener(setonBarTouthnListener touthnListener){
+    public void getonBarProgressListener(setonBarTouthnListener touthnListener) {
         this.touthnListener = touthnListener;
     }
 
@@ -57,31 +65,47 @@ public class WindowBarView extends View {
 
     public WindowBarView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        initView(context,attrs);
+        initView(context, attrs);
     }
 
     public WindowBarView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        initView(context,attrs);
+        initView(context, attrs);
     }
 
     public WindowBarView(Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        initView(context,attrs);
+        initView(context, attrs);
     }
 
-    private void initView(Context context,AttributeSet attrs){
+    private void initView(Context context, AttributeSet attrs) {
         paint = new Paint();
         foregrodpaint = new Paint();
         TypedArray array = context.obtainStyledAttributes(attrs, R.styleable.WindowBarView);
-        Foreground = array.getInteger(R.styleable.WindowBarView_foreground,Color.WHITE);
+        Foreground = array.getInteger(R.styleable.WindowBarView_foreground, Color.WHITE);
         cendiagram = array.getDrawable(R.styleable.WindowBarView_cendiagram);
-        maxprogress = array.getInteger(R.styleable.WindowBarView_maxprogress,100);
-        nowrogress = array.getInteger(R.styleable.WindowBarView_nowrogress,0);
-        bgcolor = array.getInteger(R.styleable.WindowBarView_bgcolor,Color.WHITE);
-        setProgress(array.getInteger(R.styleable.WindowBarView_nowrogress,nowrogress));
+        maxprogress = array.getInteger(R.styleable.WindowBarView_maxprogress, 100);
+        nowrogress = array.getInteger(R.styleable.WindowBarView_nowrogress, 0);
+        bgcolor = array.getInteger(R.styleable.WindowBarView_bgcolor, Color.WHITE);
+        setProgress(array.getInteger(R.styleable.WindowBarView_nowrogress, nowrogress));
         array.recycle();
         cendiagrambp = drawableToBitmap(cendiagram);
+
+        // 获得图片的宽高
+        widthbm = cendiagrambp.getWidth();
+        heightbm = cendiagrambp.getHeight();
+        // 设置想要的大小
+        int newWidth = 100;
+        int newHeight = 100;
+        // 计算缩放比例
+        float scaleWidth = ((float) newWidth) / widthbm;
+        float scaleHeight = ((float) newHeight) / heightbm;
+        // 取得想要缩放的matrix参数
+        matrix = new Matrix();
+        matrix.postScale(scaleWidth, scaleHeight);
+        // 得到新的图片
+        newbm = Bitmap.createBitmap(cendiagrambp, 0,
+                0, widthbm, heightbm, matrix, true);
     }
 
     @Override
@@ -110,45 +134,45 @@ public class WindowBarView extends View {
 
         }
         setMeasuredDimension(width, height);
-        rect = new Rect(0,0,width,height);
+        rect = new Rect(0, 0, width, height);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        rectforegroud = new Rect(0,0,width,(int)mPreY);
+        rectforegroud = new Rect(0, 0, width, (int) mPreY);
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(bgcolor);
         paint.setAntiAlias(true);
-        canvas.drawRect(rect,paint);
+        canvas.drawRect(rect, paint);
         foregrodpaint.setStyle(Paint.Style.FILL);
-        foregrodpaint.setStrokeWidth(20);
         foregrodpaint.setAntiAlias(true);
         foregrodpaint.setColor(Foreground);
-        canvas.drawRect(rectforegroud,foregrodpaint);
-        canvas.drawBitmap(cendiagrambp,width/2-60,(int)mPreY-60,paint);     //绘制滑块
+        canvas.drawRect(rectforegroud, foregrodpaint);
+        canvas.drawBitmap(newbm, width / 2 - newbm.getWidth() / 2, (int) mPreY - newbm.getHeight() / 2, paint);     //绘制滑块
     }
 
     /**
      * 获取当前位置
      */
-    public int getProgress(){
-        progress = (int)((float)nowrogress/(float)maxprogress*100);  //当前进度
+    public int getProgress() {
+        progress = (int) ((float) nowrogress / (float) maxprogress * 100);  //当前进度
         return progress;
     }
 
     /**
      * 设置当前进度
      */
-    public synchronized void setProgress(final int nowrogress){
-        new Thread(){
+    public synchronized void setProgress(final int nowrogress) {
+
+        new Thread() {
             @Override
             public void run() {
                 super.run();
                 try {
                     Thread.sleep(100);
-                    if(height!=0){
-                        mPreY = nowrogress*100*maxprogress/height;
+                    if (height != 0) {
+                        mPreY = ((int) ((float) nowrogress / (float) maxprogress * height));
                         postInvalidate();
                     }
                 } catch (InterruptedException e) {
@@ -161,29 +185,30 @@ public class WindowBarView extends View {
     /**
      * 判断，如果滑动的位置大于控件的高度，说明此事滑块已经滑到下面
      * 如果小于0说明在上面
+     *
      * @param event
      * @return
      */
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        switch (event.getAction()){
+        switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 mPreX = event.getX();
                 mPreY = event.getY();
-                touthnListener.GetProgress((int)(mPreY/height*maxprogress));
+                touthnListener.GetProgress((int) (mPreY / height * maxprogress));
                 invalidate();
                 return true;
             case MotionEvent.ACTION_MOVE:
                 mPreY = event.getY();
-                if(mPreY<0){
+                if (mPreY < 0) {
                     mPreY = 0;
-                }else if(mPreY>height){
+                } else if (mPreY > height) {
                     mPreY = height;
-                }else{
-                    mPreY = event.getY()+8;
+                } else {
+                    mPreY = event.getY() + 8;
                 }
-                touthnListener.GetProgress((int)(mPreY/height*maxprogress));
+                touthnListener.GetProgress((int) (mPreY / height * maxprogress));
                 invalidate();
                 break;
         }
@@ -192,6 +217,7 @@ public class WindowBarView extends View {
 
     /**
      * drawable转bitmap
+     *
      * @param drawable
      * @return
      */

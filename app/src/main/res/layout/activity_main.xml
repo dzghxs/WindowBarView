@@ -15,7 +15,7 @@
         android:layout_height="300dp"
         app:bgcolor="@color/white"
         app:foreground="@color/windowbar"
-        app:cendiagram="@mipmap/ic_launcher"
+        app:cendiagram="@drawable/bgg"
         app:nowrogress="10"
         app:maxprogress="100"/>
 
@@ -26,5 +26,13 @@
         android:layout_marginTop="20dp"
         android:gravity="center"
         android:textColor="#fff"/>
+
+    <EditText
+        android:id="@+id/et"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="#fff"
+        android:inputType="number"
+        />
 
 </LinearLayout>
