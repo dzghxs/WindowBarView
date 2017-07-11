@@ -156,7 +156,11 @@ public class WindowBarView extends View {
      * 获取当前位置
      */
     public int getProgress() {
-        progress = (int) ((float) nowrogress / (float) maxprogress * 100);  //当前进度
+        if(mPreY==0){
+            progress = (int) ((float) nowrogress / (float) maxprogress * 100);  //当前进度
+        }else{
+            progress = Math.round(mPreY / height*(float) maxprogress);  //当前进度
+        }
         return progress;
     }
 
@@ -164,22 +168,26 @@ public class WindowBarView extends View {
      * 设置当前进度
      */
     public synchronized void setProgress(final int nowrogress) {
-
-        new Thread() {
-            @Override
-            public void run() {
-                super.run();
-                try {
-                    Thread.sleep(100);
-                    if (height != 0) {
-                        mPreY = ((int) ((float) nowrogress / (float) maxprogress * height));
-                        postInvalidate();
+        if(height != 0){
+            mPreY = ((int) ((float) nowrogress / (float) maxprogress * height));
+            invalidate();
+        }else{
+            new Thread() {
+                @Override
+                public void run() {
+                    super.run();
+                    try {
+                        Thread.sleep(100);
+                        if (height != 0) {
+                            mPreY = ((int) ((float) nowrogress / (float) maxprogress * height));
+                            postInvalidate();
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
                 }
-            }
-        }.start();
+            }.start();
+        }
     }
 
     /**

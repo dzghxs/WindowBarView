@@ -43,11 +43,12 @@ public class MainActivity extends AppCompatActivity {
                 }else{
                     wbv.setProgress(Integer.parseInt(s.toString()));
                 }
+                tv.setText(wbv.getProgress()+"");
             }
 
             @Override
             public void afterTextChanged(Editable s) {
-                tv.setText(wbv.getProgress()+"");
+//                tv.setText(wbv.getProgress()+"");
             }
         });
     }
